@@ -44,7 +44,6 @@ pub async fn get_db_guild(guild: Guild) -> Result<DbGuild, CommandError> {
     )?;
 
     if let Some(db_guild) = result.pop() {
-        println!("[DB] Guild fetched from DB ({})", guild.id.to_string());
         Ok(db_guild)
     } else {
         Err("[DB] Guild not registered.".into())
