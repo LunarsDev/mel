@@ -1,8 +1,6 @@
-mod util;
 mod image;
+mod util;
 
-use std::collections::HashSet;
-use chrono::{SecondsFormat, Utc};
 use rand::{thread_rng, Rng};
 use serenity::{
     builder::{CreateEmbed, CreateEmbedFooter},
@@ -16,6 +14,7 @@ use serenity::{
     },
     model::{channel::Message, id::UserId},
 };
+use std::collections::HashSet;
 use tokio::spawn;
 
 use crate::{
@@ -29,7 +28,7 @@ use crate::{
         models::guild::DbGuildType,
     },
     errors::error_permission,
-    utils::constants::colors,
+    utils::constants::{colors, msg_emojis},
 };
 
 pub fn crete_framework() -> StandardFramework {
@@ -80,7 +79,7 @@ async fn help(
         let mut embed = CreateEmbed::default();
         embed.title("Available Commands");
         embed.description("To get more info on a command, type `help {command}`");
-        embed.image("https://i.imgur.com/mQVFSrP.gif");
+        // embed.image("https://i.imgur.com/mQVFSrP.gif");
         embed.color(colors::PURPLE);
 
         for group in groups.iter() {
@@ -92,7 +91,6 @@ async fn help(
             let group_cmds = group.options.commands;
 
             let mut group_cmds_name = "".to_string();
-
             for cmd in group_cmds.iter() {
                 if cmd.options.help_available {
                     group_cmds_name
@@ -123,7 +121,7 @@ async fn help(
         embed.color(colors::PURPLE);
 
         if cmd_name == "help" {
-            embed.image("https://i.imgur.com/vg0z9yT.jpg");
+            // embed.image("https://i.imgur.com/vg0z9yT.jpg");
             embed.title("More info for help");
             embed.description("The help command provides a list of all usable commands.");
             embed.field("Use", format!("`{0}help <command>*`", prefix), false);
@@ -311,21 +309,47 @@ async fn before_command(ctx: &Context, msg: &Message, name: &str) -> bool {
 
 #[hook]
 async fn after_command(ctx: &Context, msg: &Message, name: &str, why: CommandResult) {
-    if let Err(why) = why {
-        let date = Utc::now();
+    let date = chrono::Local::now();
+    let divider = "••• ";
 
+    if let Err(why) = why {
         println!(
-            "Time: {} User: {} Command: {} Error: {:?}",
-            date.to_rfc3339_opts(SecondsFormat::Secs, false),
+            "\nCommand Errored:\n{}Time: {}\n{}User: {}\n{}Command: {}\n{}Error: {:#?}",
+            divider,
+            date.format("%Y-%m-%d [%H:%M:%S]"),
+            divider,
             msg.author.tag(),
+            divider,
             name,
+            divider,
             why
         );
-        let _ = msg.react(ctx, '❌').await;
 
-        // let api = get_violet_api();
-        // if api.send_error(VioletError::error(why, name)).await.is_err() {
-        //     eprintln!("Falha ao enviar o erro para a violet")
-        // }
+        let mut embed = CreateEmbed::default();
+        embed.title("Error!");
+        embed.description(format!(
+            "{} Error running the command `{}`:\n```{}```\n> Please report this error to: `{}`",
+            msg_emojis::TICKNO,
+            name,
+            why,
+            "Fifi#2000"
+        ));
+        embed.color(colors::RED);
+
+        // let _ = msg.react(ctx, '❌').await;
+        let _ = msg
+            .channel_id
+            .send_message(ctx, |x| x.set_embed(embed).reference_message(msg))
+            .await;
+    } else {
+        println!(
+            "\nCommand Processed:\n{}Time: {}\n{}User: {}\n{}Command: {}\n",
+            divider,
+            date.format("%Y-%m-%d [%H:%M:%S]"),
+            divider,
+            msg.author.tag(),
+            divider,
+            name
+        );
     }
 }
