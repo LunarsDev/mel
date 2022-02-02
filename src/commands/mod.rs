@@ -1,5 +1,6 @@
 mod image;
 mod util;
+mod voice;
 
 use rand::{thread_rng, Rng};
 use serenity::{
@@ -54,6 +55,7 @@ pub fn crete_framework() -> StandardFramework {
         // .group(&moderation::MODERATION_GROUP)
         // .group(&weeb::WEEB_GROUP)
         // .group(&config::CONFIG_GROUP)
+        .group(&voice::VOICE_GROUP)
         .group(&image::IMAGE_GROUP)
         // .group(&nsfw::NSFW_GROUP)
         // .group(&about::ABOUT_GROUP)
